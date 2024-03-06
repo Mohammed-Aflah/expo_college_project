@@ -12,6 +12,22 @@ import { getIndiaDistrict } from "india-state-district";
 import upload from "../../assets/212.svg";
 import upload2 from "../../assets/227.svg";
 import { Input } from "@/components/ui/input";
+import * as yup from 'yup';
+
+const validationSchema = yup.object().shape({
+  title: yup.string().required('Title is required'),
+  coverImge: yup.mixed().required('Cover Image is required'),
+  description: yup.string().required('Description is required'),
+  date: yup.date().required('Date is required'),
+  district: yup.string().required('District is required'),
+  artForms: yup.array().of(
+    yup.object().shape({
+      title: yup.string().required('Artform Title is required'),
+      seats: yup.number().required('Artform Seats is required'),
+      image: yup.mixed().required('Artform Image is required'),
+    })
+  ),
+});
 import {
   Popover,
   PopoverContent,
@@ -39,6 +55,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { uploadExpo } from "@/redux/actions/User/allUserAction";
 export function ExpoModal() {
   const [date, setDate] = useState<Date>();
+  // Validate the form data
 
   const [loading1,setLoading]=useState<boolean>(false)
 
@@ -57,13 +74,14 @@ export function ExpoModal() {
     description: "",
     date: new Date(),
     district: "",
-    artForms: [{ id: uuid(), title: "", seats: "", image: null }],
+    artForms: [{ id: uuid(), title: "", seats: 0, image: null }],
   });
   const handleDateChange = (selectedDate: Date) => {
     setDate(selectedDate);
     setExpoDetails({ ...expoDetails, date: new Date(selectedDate) });
   };
   const handleArtFormChange = (index, e) => {
+
     const newArtForms = expoDetails.artForms.map((artForm, artFormIndex) => {
       if (index === artFormIndex) {
         return { ...artForm, [e.target.name]: e.target.value };
@@ -134,6 +152,15 @@ export function ExpoModal() {
   const Clsref=useRef<HTMLButtonElement>(null)
   const {loading}=useSelector((state:RootState)=>state.expos)
   const handleSubmit = async () => {
+    try {
+      await validationSchema.validate(expoDetails, { abortEarly: false });
+    } catch (validationErrors) {
+      console.error(validationErrors.errors);
+      toast.error(validationErrors.errors)
+      return;
+    }
+    console.log(expoDetails.artForms,' 99');
+    
     setLoading(true)
     
     let coverImageUrl=""
@@ -164,7 +191,7 @@ export function ExpoModal() {
     // Append each art form data
     expoDetails.artForms.forEach((artForm, index) => {
       formData.append(`artForms[${index}][title]`, artForm.title);
-      formData.append(`artForms[${index}][seats]`, artForm.seats);
+      formData.append(`artForms[${index}][seats]`, Number(artForm.seats));
       if (artForm.image) {
         formData.append(`artForms[${index}][image]`, artForm.image);
       }

@@ -46,18 +46,38 @@ export const logoutUser: any = createAsyncThunk(
       return rejectWithValue(err);
     }
   }
-  );
-  
+);
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const loginUser: any = createAsyncThunk(
   "user/loginuser",
   async (userCredentials, { rejectWithValue }) => {
     try {
-      const {data}=await axiosInstance.post('/login',userCredentials)
+      const { data } = await axiosInstance.post("/login", userCredentials);
 
+      return data;
+    } catch (error) {
+      if (error.response.data.err) {
+        return rejectWithValue(error.response.data.err);
+      } else {
+        return rejectWithValue(error.message);
+      }
+    }
+  }
+);
+
+export const getAllExpo = createAsyncThunk(
+  "admin/getALlexpo",
+  async (_, { rejectWithValue }) => {
+    try {
+      const {data}=await axiosInstance.get(`/add-expo`)
       return data
     } catch (error) {
-      return rejectWithValue(error)
+      if (error.response.data.err) {
+        return rejectWithValue(error.response.data.err);
+      } else {
+        return rejectWithValue(error.message);
+      }
     }
   }
 );
