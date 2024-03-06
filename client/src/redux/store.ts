@@ -1,7 +1,7 @@
 import {configureStore} from '@reduxjs/toolkit'
 import userReducer from './slices/userSlice'
 import allUsers from './slices/allUsers'
-import chatSlice from './slices/chatSlice'
+import expos from './slices/expos'
 
 
 
@@ -9,7 +9,7 @@ const store=configureStore({
     reducer:{
         user:userReducer,
         allUsers:allUsers,
-        chat:chatSlice
+        expos:expos
     }
 })
 export default store

@@ -8,7 +8,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { getIndiaState, getIndiaDistrict } from "india-state-district";
+import { getIndiaDistrict } from "india-state-district";
 import upload from "../../assets/212.svg";
 import upload2 from "../../assets/227.svg";
 import { Input } from "@/components/ui/input";
@@ -27,17 +27,20 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Upload, X } from "lucide-react";
-import {  useState } from "react";
+import {  useRef, useState } from "react";
 
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectGroup } from "@radix-ui/react-select";
 import toast from "react-hot-toast";
 import { v4 as uuid } from "uuid";
+import { AppDispatch, RootState } from "@/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { uploadExpo } from "@/redux/actions/User/allUserAction";
 export function ExpoModal() {
   const [date, setDate] = useState<Date>();
 
-
+  const [loading1,setLoading]=useState<boolean>(false)
 
   // https://api.cloudinary.com/v1_1/dzaoju6lr/image/upload
   // const imageUrl = response.data.secure_url
@@ -127,9 +130,11 @@ export function ExpoModal() {
       return ''; // Handle the error appropriately
     }
   };
-
+  const dispatch:AppDispatch=useDispatch()
+  const Clsref=useRef<HTMLButtonElement>(null)
+  const {loading}=useSelector((state:RootState)=>state.expos)
   const handleSubmit = async () => {
-    alert('dubmi')
+    setLoading(true)
     
     let coverImageUrl=""
     if(expoDetails.coverImge){
@@ -152,10 +157,10 @@ export function ExpoModal() {
     formData.append("description", updatedExpoDetails.description);
     formData.append("date", updatedExpoDetails.date.toISOString()); // Assuming date handling on the server expects a string
     formData.append("district", updatedExpoDetails.district);
-    if (expoDetails.coverImge) {
-      formData.append("coverImage", updatedExpoDetails.coverImge);
+    // Append cover image if it exists
+    if (coverImageUrl) {
+      formData.append("coverImage", coverImageUrl);
     }
-
     // Append each art form data
     expoDetails.artForms.forEach((artForm, index) => {
       formData.append(`artForms[${index}][title]`, artForm.title);
@@ -170,7 +175,10 @@ export function ExpoModal() {
     console.log([...formData]); // For demonstration; remove in production
     console.log(formData);
     console.log(updatedExpoDetails);
-    
+    setLoading(false)
+    await dispatch(uploadExpo(updatedExpoDetails))
+    toast.success(" Expo added ")
+    Clsref.current?.click()
   };
 
   return (
@@ -185,7 +193,7 @@ export function ExpoModal() {
               <AlertDialogTitle>Add Expo</AlertDialogTitle>
             </div>
             <div className="flex justify-end">
-              <AlertDialogCancel className="p-0 h-auto w-5 border-none">
+              <AlertDialogCancel className="p-0 h-auto w-5 border-none" ref={Clsref}>
                 <X />
               </AlertDialogCancel>
             </div>
@@ -351,10 +359,10 @@ export function ExpoModal() {
           <div className="w-full h-16">
             <Button
               type="submit"
-              className="w-full font-semibold"
+              className={`w-full font-semibold ${loading||loading1&&"pointer-events-none bg-gray-400"}`}
               onClick={handleSubmit}
             >
-              Submit
+              {loading||loading1?"Processing":"Submit"}
             </Button>
           </div>
         </AlertDialogFooter>
