@@ -27,21 +27,151 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Upload, X } from "lucide-react";
-import { useState } from "react";
+import {  useState } from "react";
 
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectGroup } from "@radix-ui/react-select";
-
+import toast from "react-hot-toast";
+import { v4 as uuid } from "uuid";
 export function ExpoModal() {
   const [date, setDate] = useState<Date>();
-  const handleDateChange = (selectedDate: Date) => {
-    setDate(selectedDate);
-  };
-  const states = getIndiaState();
-  console.log("Indian States:", states);
+
+
+
+  // https://api.cloudinary.com/v1_1/dzaoju6lr/image/upload
+  // const imageUrl = response.data.secure_url
 
   const districts: string[] = getIndiaDistrict("KL");
+
+
+  function handleTextInputChange(e) {
+    setExpoDetails({ ...expoDetails, [e.target.name]: e.target.value });
+  }
+  const [expoDetails, setExpoDetails] = useState({
+    title: "",
+    coverImge: null,
+    description: "",
+    date: new Date(),
+    district: "",
+    artForms: [{ id: uuid(), title: "", seats: "", image: null }],
+  });
+  const handleDateChange = (selectedDate: Date) => {
+    setDate(selectedDate);
+    setExpoDetails({ ...expoDetails, date: new Date(selectedDate) });
+  };
+  const handleArtFormChange = (index, e) => {
+    const newArtForms = expoDetails.artForms.map((artForm, artFormIndex) => {
+      if (index === artFormIndex) {
+        return { ...artForm, [e.target.name]: e.target.value };
+      }
+      return artForm;
+    });
+
+    setExpoDetails({ ...expoDetails, artForms: newArtForms });
+  };
+
+  const handleArtFormImageChange = (index, e) => {
+    const file = e.target.files[0]; // Get the file
+    const newArtForms = expoDetails.artForms.map((artForm, artFormIndex) => {
+      if (index === artFormIndex) {
+        return { ...artForm, image: file };
+      }
+      return artForm;
+    });
+
+    setExpoDetails({ ...expoDetails, artForms: newArtForms });
+  };
+  const addArtForm = () => {
+    const newArtForm = {
+      id: uuid(),
+      title: "",
+      seats: "",
+      image: null,
+    };
+    setExpoDetails({
+      ...expoDetails,
+      artForms: [...expoDetails.artForms, newArtForm],
+    });
+  };
+
+  const removeArtForm = (id) => {
+    const filteredArtForms = expoDetails.artForms.filter(
+      (artForm) => artForm.id !== id
+    );
+    if (filteredArtForms.length < 1) {
+      toast.error("Need At least one artform");
+      return;
+    }
+    setExpoDetails({
+      ...expoDetails,
+      artForms: filteredArtForms,
+    });
+  };
+
+  const uploadImageToCloudinary = async (imageFile) => {
+    const formData = new FormData();
+    formData.append('file', imageFile);
+    formData.append('upload_preset','ml_default')
+  
+    try {
+      // 9d43f0bc549b13f9aed6c48d798762
+      const response = await fetch('https://api.cloudinary.com/v1_1/dzaoju6lr/image/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      return data.secure_url; // Return the URL of the uploaded image
+    } catch (error) {
+      console.error('Error uploading image to Cloudinary:', error);
+      return ''; // Handle the error appropriately
+    }
+  };
+
+  const handleSubmit = async () => {
+    alert('dubmi')
+    
+    let coverImageUrl=""
+    if(expoDetails.coverImge){
+      coverImageUrl=await uploadImageToCloudinary(expoDetails.coverImge)
+    }
+    console.log(coverImageUrl)
+    const artFormsWithUploadedImages = await Promise.all(expoDetails.artForms.map(async (artForm) => {
+      let imageUrl = artForm.image ? await uploadImageToCloudinary(artForm.image) : null;
+      return { ...artForm, image: imageUrl }; // Replace local image file with Cloudinary URL
+    }));
+
+    const updatedExpoDetails = {
+      ...expoDetails,
+      coverImage: coverImageUrl,
+      artForms: artFormsWithUploadedImages,
+    };
+
+    const formData = new FormData();
+    formData.append("title", updatedExpoDetails.title);
+    formData.append("description", updatedExpoDetails.description);
+    formData.append("date", updatedExpoDetails.date.toISOString()); // Assuming date handling on the server expects a string
+    formData.append("district", updatedExpoDetails.district);
+    if (expoDetails.coverImge) {
+      formData.append("coverImage", updatedExpoDetails.coverImge);
+    }
+
+    // Append each art form data
+    expoDetails.artForms.forEach((artForm, index) => {
+      formData.append(`artForms[${index}][title]`, artForm.title);
+      formData.append(`artForms[${index}][seats]`, artForm.seats);
+      if (artForm.image) {
+        formData.append(`artForms[${index}][image]`, artForm.image);
+      }
+    });
+
+    // Here you would submit formData to your server/API
+    // For example: axios.post('/api/expo', formData);
+    console.log([...formData]); // For demonstration; remove in production
+    console.log(formData);
+    console.log(updatedExpoDetails);
+    
+  };
 
   return (
     <AlertDialog>
@@ -62,15 +192,41 @@ export function ExpoModal() {
           </div>
         </AlertDialogHeader>
         <AlertDialogFooter className="grid grid-cols-1 gap-3">
-          <div className="w-full h-28 border rounded-md overflow-hidden relative">
-            <img src={upload} className="object-cover h-full mx-auto " alt="" />
-            <button className="absolute right-0 bottom-0 border flex items-center justify-center rounded-full bg-white text-black h-7 w-7">
+          <div className="w-full h-28 border rounded-md overflow-hidden relative py-2">
+            <img
+              src={
+                expoDetails.coverImge
+                  ? URL.createObjectURL(expoDetails.coverImge)
+                  : upload
+              }
+              className="object-cover h-full mx-auto "
+              alt=""
+            />
+            <input
+              type="file"
+              className="hidden"
+              id="cover"
+              onChange={(e) => {
+                if (e?.target?.files[0]) {
+                  setExpoDetails({
+                    ...expoDetails,
+                    coverImge: e.target.files[0],
+                  });
+                }
+              }}
+            />
+            <label
+              htmlFor="cover"
+              className="cursor-pointer absolute right-0 bottom-0 border flex items-center justify-center rounded-full bg-white text-black h-7 w-7"
+            >
               <Upload className="w-5" />
-            </button>
+            </label>
           </div>
           <div className="flex justify-between gap-3  w-full pr-2">
             <Input
               type="text"
+              name="title"
+              onChange={handleTextInputChange}
               placeholder="Enter Title of the Expo"
               className="w-full"
             />
@@ -79,7 +235,11 @@ export function ExpoModal() {
                 <SelectItem value="dark">Dark</SelectItem>
               <SelectItem value="system">System</SelectItem> */}
             {/*  */}
-            <Select>
+            <Select
+              onValueChange={(value) => {
+                setExpoDetails({ ...expoDetails, district: value });
+              }}
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="District" />
               </SelectTrigger>
@@ -121,25 +281,81 @@ export function ExpoModal() {
           </div>
           {/* <AlertDialogFooter className="grid grid-cols-1 w-full gap-3 p-0 "> */}
           <div className="w-full">
-            <Textarea placeholder=" Description of expo" />
+            <Textarea
+              placeholder=" Description of expo"
+              name="description"
+              onChange={handleTextInputChange}
+            />
           </div>
-          <div className="h-auto w-full rounded-md border grid-cols-1 p-4 ">
-            <div className="flex justify-between w-full gap-3">
-              <Input type="text" placeholder="Enter title of Artform" />
-              <Input type="text" placeholder="Enter available seats" />
-            </div>
-            <div className="w-full h-28 border rounded-md overflow-hidden relative mt-3 items-center justify-center">
-              <img src={upload2} className="object-cover h-full mx-auto " alt="" />
-              <button className="absolute right-0 bottom-0 border flex items-center justify-center rounded-full bg-white text-black h-7 w-7">
-                <Upload className="w-5" />
-              </button>
-            </div>
-            <div className="mt-3 flex justify-end">
-              <Button>Add artform </Button>
-            </div>
-          </div>
+          {expoDetails.artForms.map((value, index) => {
+            return (
+              <div
+                className="h-auto w-full rounded-md border grid-cols-1 p-4 "
+                key={value.id}
+              >
+                <div className="flex justify-between w-full gap-3">
+                  <Input
+                    type="text"
+                    placeholder="Enter title of Artform"
+                    name="title"
+                    onChange={(e) => handleArtFormChange(index, e)}
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Enter available seats"
+                    name="seats"
+                    onChange={(e) => handleArtFormChange(index, e)}
+                  />
+                </div>
+                <div className="w-full h-28 border rounded-md overflow-hidden relative mt-3 items-center justify-center py-2">
+                  {value.image ? (
+                    <>
+                      <img
+                        src={URL.createObjectURL(value.image)}
+                        className="object-cover h-full mx-auto "
+                        alt="Artform"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <img
+                        src={upload2}
+                        alt=""
+                        className="object-cover h-full mx-auto"
+                      />
+                    </>
+                  )}
+
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => handleArtFormImageChange(index, e)}
+                    id={`art-form-image-${index}`}
+                  />
+                  <label
+                    htmlFor={`art-form-image-${index}`}
+                    className="absolute right-0 bottom-0 border flex items-center justify-center rounded-full bg-white text-black h-7 w-7"
+                  >
+                    <Upload className="w-5" />
+                  </label>
+                </div>
+                <div className="mt-3 flex justify-end gap-3">
+                  <Button onClick={addArtForm}>Add artform </Button>
+                  <Button onClick={() => removeArtForm(value.id)}>
+                    Remove artform{" "}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
           <div className="w-full h-16">
-            <Button type="submit" className="w-full font-semibold">Submit</Button>
+            <Button
+              type="submit"
+              className="w-full font-semibold"
+              onClick={handleSubmit}
+            >
+              Submit
+            </Button>
           </div>
         </AlertDialogFooter>
       </AlertDialogContent>
