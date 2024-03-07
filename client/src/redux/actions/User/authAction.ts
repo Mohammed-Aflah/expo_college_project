@@ -1,6 +1,7 @@
 import axiosInstance from "@/constant/constant";
 import { userData } from "@/types/userAuth";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import toast from "react-hot-toast";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const signupUser: any = createAsyncThunk(

@@ -3,17 +3,16 @@ import Navbar from "./components/common/Navbar";
 import { ThemeProvider } from "./components/theme/theme-provider";
 import { Signup } from "./pages/user/Signup";
 import { Login } from "./pages/user/Login";
-import { Suspense, lazy, useEffect, useState } from "react";
+import { lazy, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { checkAuthentication } from "./redux/actions/User/authAction";
 import { RootState } from "./redux/store";
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
 import ErrorPage from "./pages/Error";
 import AdminExpoList from "./pages/admin/Admin";
 const Chat = lazy(() => import("./pages/user/Expo"));
 
 function App() {
-  
   const [loading, setLoading] = useState(true);
   const user = useSelector((state: RootState) => state?.user?.user); // Adjust RootState based on your actual state structure
   const dispatch = useDispatch();
@@ -33,29 +32,26 @@ function App() {
 
   return (
     <main className="overflow-hidden">
-      
-      <Toaster/>
+      <Toaster />
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Navbar />
-        <Suspense fallback={<h2>Loading...</h2>}>
-          <Routes>
-            <Route
-              path="/"
-              element={user?.user ? <Chat /> : <Navigate to="/login" />}
-            >
-            </Route>
-            <Route
-              path="/signup"
-              element={user?.user ? <Navigate to={"/"} /> : <Signup />}
-            />
-            <Route
-              path="/login"
-              element={user?.user ? <Navigate to={"/"} /> : <Login />}
-            />
-            <Route path="/admin/" element={<AdminExpoList/>}/>
-            <Route path="*" element={<ErrorPage/>}/>
-          </Routes>
-        </Suspense>
+
+        <Routes>
+          <Route
+            path="/"
+            element={user?.user ? <Chat /> : <Navigate to="/login" />}
+          ></Route>
+          <Route
+            path="/signup"
+            element={user?.user ? <Navigate to={"/"} /> : <Signup />}
+          />
+          <Route
+            path="/login"
+            element={user?.user ? <Navigate to={"/"} /> : <Login />}
+          />
+          <Route path="/admin/" element={<AdminExpoList />} />
+          <Route path="*" element={<ErrorPage />} />
+        </Routes>
       </ThemeProvider>
     </main>
   );

@@ -68,6 +68,8 @@ const userSlice = createSlice({
       .addCase(logoutUser.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload?.response?.data?.err;
+        toast.error(payload?.response?.data?.err )
+        
       })
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
@@ -82,7 +84,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.user = null;
         state.error = payload?.response?.data?.err;
-        toast.error(payload?.response?.data?.err);
+        toast.error(payload?.response?.data?.err || "Login failed");
       });
   },
 });

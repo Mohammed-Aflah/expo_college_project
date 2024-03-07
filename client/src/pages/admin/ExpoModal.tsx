@@ -12,19 +12,19 @@ import { getIndiaDistrict } from "india-state-district";
 import upload from "../../assets/212.svg";
 import upload2 from "../../assets/227.svg";
 import { Input } from "@/components/ui/input";
-import * as yup from 'yup';
+import * as yup from "yup";
 
 const validationSchema = yup.object().shape({
-  title: yup.string().required('Title is required'),
-  coverImge: yup.mixed().required('Cover Image is required'),
-  description: yup.string().required('Description is required'),
-  date: yup.date().required('Date is required'),
-  district: yup.string().required('District is required'),
+  title: yup.string().required("Title is required"),
+  coverImge: yup.mixed().required("Cover Image is required"),
+  description: yup.string().required("Description is required"),
+  date: yup.date().required("Date is required"),
+  district: yup.string().required("District is required"),
   artForms: yup.array().of(
     yup.object().shape({
-      title: yup.string().required('Artform Title is required'),
-      seats: yup.number().required('Artform Seats is required'),
-      image: yup.mixed().required('Artform Image is required'),
+      title: yup.string().required("Artform Title is required"),
+      seats: yup.number().required("Artform Seats is required"),
+      image: yup.mixed().required("Artform Image is required"),
     })
   ),
 });
@@ -43,7 +43,7 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Upload, X } from "lucide-react";
-import {  useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,13 +57,12 @@ export function ExpoModal() {
   const [date, setDate] = useState<Date>();
   // Validate the form data
 
-  const [loading1,setLoading]=useState<boolean>(false)
+  const [loading1, setLoading] = useState<boolean>(false);
 
   // https://api.cloudinary.com/v1_1/dzaoju6lr/image/upload
   // const imageUrl = response.data.secure_url
 
   const districts: string[] = getIndiaDistrict("KL");
-
 
   function handleTextInputChange(e) {
     setExpoDetails({ ...expoDetails, [e.target.name]: e.target.value });
@@ -81,7 +80,6 @@ export function ExpoModal() {
     setExpoDetails({ ...expoDetails, date: new Date(selectedDate) });
   };
   const handleArtFormChange = (index, e) => {
-
     const newArtForms = expoDetails.artForms.map((artForm, artFormIndex) => {
       if (index === artFormIndex) {
         return { ...artForm, [e.target.name]: e.target.value };
@@ -132,46 +130,53 @@ export function ExpoModal() {
 
   const uploadImageToCloudinary = async (imageFile) => {
     const formData = new FormData();
-    formData.append('file', imageFile);
-    formData.append('upload_preset','ml_default')
-  
+    formData.append("file", imageFile);
+    formData.append("upload_preset", "ml_default");
+
     try {
       // 9d43f0bc549b13f9aed6c48d798762
-      const response = await fetch('https://api.cloudinary.com/v1_1/dzaoju6lr/image/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(
+        "https://api.cloudinary.com/v1_1/dzaoju6lr/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
       const data = await response.json();
       return data.secure_url; // Return the URL of the uploaded image
     } catch (error) {
-      console.error('Error uploading image to Cloudinary:', error);
-      return ''; // Handle the error appropriately
+      console.error("Error uploading image to Cloudinary:", error);
+      return ""; // Handle the error appropriately
     }
   };
-  const dispatch:AppDispatch=useDispatch()
-  const Clsref=useRef<HTMLButtonElement>(null)
-  const {loading}=useSelector((state:RootState)=>state.expos)
+  const dispatch: AppDispatch = useDispatch();
+  const Clsref = useRef<HTMLButtonElement>(null);
+  const { loading } = useSelector((state: RootState) => state.expos);
   const handleSubmit = async () => {
     try {
       await validationSchema.validate(expoDetails, { abortEarly: false });
     } catch (validationErrors) {
       console.error(validationErrors.errors);
-      toast.error(validationErrors.errors)
+      toast.error(validationErrors.errors);
       return;
     }
-    console.log(expoDetails.artForms,' 99');
-    
-    setLoading(true)
-    
-    let coverImageUrl=""
-    if(expoDetails.coverImge){
-      coverImageUrl=await uploadImageToCloudinary(expoDetails.coverImge)
+    console.log(expoDetails.artForms, " 99");
+
+    setLoading(true);
+
+    let coverImageUrl = "";
+    if (expoDetails.coverImge) {
+      coverImageUrl = await uploadImageToCloudinary(expoDetails.coverImge);
     }
-    console.log(coverImageUrl)
-    const artFormsWithUploadedImages = await Promise.all(expoDetails.artForms.map(async (artForm) => {
-      let imageUrl = artForm.image ? await uploadImageToCloudinary(artForm.image) : null;
-      return { ...artForm, image: imageUrl }; // Replace local image file with Cloudinary URL
-    }));
+    console.log(coverImageUrl);
+    const artFormsWithUploadedImages = await Promise.all(
+      expoDetails.artForms.map(async (artForm) => {
+        let imageUrl = artForm.image
+          ? await uploadImageToCloudinary(artForm.image)
+          : null;
+        return { ...artForm, image: imageUrl }; // Replace local image file with Cloudinary URL
+      })
+    );
 
     const updatedExpoDetails = {
       ...expoDetails,
@@ -202,10 +207,10 @@ export function ExpoModal() {
     console.log([...formData]); // For demonstration; remove in production
     console.log(formData);
     console.log(updatedExpoDetails);
-    setLoading(false)
-    await dispatch(uploadExpo(updatedExpoDetails))
-    toast.success(" Expo added ")
-    Clsref.current?.click()
+    setLoading(false);
+    await dispatch(uploadExpo(updatedExpoDetails));
+    toast.success(" Expo added ");
+    Clsref.current?.click();
   };
 
   return (
@@ -220,7 +225,10 @@ export function ExpoModal() {
               <AlertDialogTitle>Add Expo</AlertDialogTitle>
             </div>
             <div className="flex justify-end">
-              <AlertDialogCancel className="p-0 h-auto w-5 border-none" ref={Clsref}>
+              <AlertDialogCancel
+                className="p-0 h-auto w-5 border-none"
+                ref={Clsref}
+              >
                 <X />
               </AlertDialogCancel>
             </div>
@@ -386,10 +394,12 @@ export function ExpoModal() {
           <div className="w-full h-16">
             <Button
               type="submit"
-              className={`w-full font-semibold ${loading||loading1&&"pointer-events-none bg-gray-400"}`}
+              className={`w-full font-semibold ${
+                loading || (loading1 && "pointer-events-none bg-gray-400")
+              }`}
               onClick={handleSubmit}
             >
-              {loading||loading1?"Processing":"Submit"}
+              {!loading || loading1 ? "Processing" : "Submit"}
             </Button>
           </div>
         </AlertDialogFooter>
