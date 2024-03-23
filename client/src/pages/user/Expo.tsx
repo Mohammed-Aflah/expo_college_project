@@ -13,26 +13,36 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getIndiaDistrict } from "india-state-district";
+import { ExpoDetail } from "./ExpoDetail";
+import { Filter } from "lucide-react";
 function Chat() {
   const dispatch: AppDispatch = useDispatch();
   const { expos, loading } = useSelector((state: RootState) => state.expos);
   useEffect(() => {
-    dispatch(getAllExpo());
+    dispatch(getAllExpo({ district: "" }));
   }, [dispatch]);
   const districts: string[] = getIndiaDistrict("KL");
   const [Expos, setAllExpos] = useState();
   useEffect(() => {
     setAllExpos(expos);
   }, [expos]);
+  const [filter, setIsFilter] = useState<boolean>(false);
   return (
     <main className="flex flex-col gap-5 p-5">
-      <div className="w-full py-2 flex justify-end border-t border-b mt-2">
+      <div className="w-full py-2 flex justify-end gap-2 border-t border-b mt-2">
+        {filter && (
+          <div className="h-10  flex items-center gap-3 px-2 border rounded-md bg-primary text-primary-foreground cursor-pointer" onClick={()=>{
+            dispatch(getAllExpo({district:""}))
+            setIsFilter(false)
+          }}>
+            <Filter className="w-5" />
+            clear filter
+          </div>
+        )}
         <Select
           onValueChange={(selectedValue) => {
-            console.log(JSON.stringify(Expos));
-            setAllExpos(
-              Expos?.filter((expo) => expo.district === selectedValue)
-            );
+            dispatch(getAllExpo({ district: selectedValue }));
+            setIsFilter(true)
           }}
         >
           <SelectTrigger className="w-[180px]">
@@ -51,7 +61,7 @@ function Chat() {
           </SelectContent>
         </Select>
       </div>
-      <section className="w-full mx-auto h-screen   justify-between grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5   gap-3">
+      <section className="w-full mx-auto h-screen   justify-between grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6   gap-3">
         {loading && (
           <>
             <CardSkelton />
@@ -68,10 +78,10 @@ function Chat() {
           Expos?.map((value) => {
             return (
               <div className="h-96 rounded-xl border flex flex-col overflow-hidden">
-                <div className="w-full h-56 border flex items-center justify-center">
+                <div className="w-full h-56 border flex items-center justify-center p-1">
                   <img
                     src={value.coverImage}
-                    className="w-full object-cover"
+                    className="h-full object-cover w-full"
                     alt=""
                   />
                 </div>
@@ -83,7 +93,7 @@ function Chat() {
                     <p>{value.description}</p>
                   </div>
                   <div>
-                    <Button className="w-full font-bold">View Details</Button>
+                    <ExpoDetail key={value._id} expoData={value} />
                   </div>
                 </div>
               </div>

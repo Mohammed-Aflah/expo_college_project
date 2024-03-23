@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import UserModal from "../Model/UserModal";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import ExpoModel from "../Model/ExpoModel";
 export const signupController = async (req: Request, res: Response) => {
   try {
     let { username, email, password } = req.body;
@@ -21,7 +22,7 @@ export const signupController = async (req: Request, res: Response) => {
       email,
       password,
       joinedDate: Date.now(),
-      role:req.body.role
+      role: req.body.role,
     }).save();
 
     const token = jwt.sign(
@@ -72,7 +73,12 @@ export const loginController = async (req: Request, res: Response) => {
     console.log(token);
 
     res.cookie("token", token, { httpOnly: true, maxAge: 1.728e8 });
-    res.json({ status: true, message: "Successfully logined", user: userData,role:userData.role });
+    res.json({
+      status: true,
+      message: "Successfully logined",
+      user: userData,
+      role: userData.role,
+    });
   } catch (error: any) {
     console.log(error.message);
     res.status(400).json({ status: false, err: error.message });
@@ -113,7 +119,9 @@ export const checkAuthController = async (req: Request, res: Response) => {
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const myId = req.query.id;
-    const users = await UserModal.find({ _id: { $ne: myId } }).sort({createdAt:-1});
+    const users = await UserModal.find({ _id: { $ne: myId } }).sort({
+      createdAt: -1,
+    });
 
     res.status(200).json({ status: true, users });
   } catch (error: Error | any) {
@@ -131,8 +139,47 @@ export const setLastSeen = async (req: Request, res: Response) => {
         },
       }
     );
-    res.status(200).json({status:true,message:"Successfull"})
+    res.status(200).json({ status: true, message: "Successfull" });
   } catch (error: Error | any) {
+    res.status(400).json({ status: false, err: error.message });
+  }
+};
+
+export const addExpo = async (req: Request, res: Response) => {
+  try {
+    delete req.body.coverImge;
+    console.log(req.body);
+    const newExpo = new ExpoModel(req.body);
+    await newExpo.save();
+    const expos = await ExpoModel.find();
+    res.status(200).json({ status: true, expos });
+  } catch (error: Error | any) {
+    console.log(error);
+    res.status(400).json({ status: false, err: error.message });
+  }
+};
+
+export const getExpo = async (req: Request, res: Response) => {
+  try {
+    // Create a query object
+    let query = {};
+
+    // If a district is specified in the query parameters, use it; otherwise, default to "Alappuzha"
+    const district = req.query.district 
+   
+    if(!district){
+
+      query = {  };
+    }else{
+      query = { district };
+    }
+
+    // Use the query object to filter results
+    const expos = await ExpoModel.find(query);
+
+    res.status(200).json({ status: true, expos });
+  } catch (error:Error|any) {
+    console.error(error); // It's a good practice to log errors to the console for debugging.
     res.status(400).json({ status: false, err: error.message });
   }
 };

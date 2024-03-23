@@ -69,9 +69,10 @@ export const loginUser: any = createAsyncThunk(
 
 export const getAllExpo = createAsyncThunk(
   "admin/getALlexpo",
-  async (_, { rejectWithValue }) => {
+  async (filterQuery:{district:any}, { rejectWithValue }) => {
+    console.log("🚀 ~ filterQuery:", filterQuery)
     try {
-      const {data}=await axiosInstance.get(`/add-expo`)
+      const {data}=await axiosInstance.get(`/add-expo?district=${filterQuery.district}`)
       return data
     } catch (error) {
       if (error.response.data.err) {

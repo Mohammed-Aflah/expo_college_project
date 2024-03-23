@@ -218,7 +218,7 @@ export function ExpoModal() {
       <AlertDialogTrigger asChild>
         <Button variant="outline">Add new Expo</Button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="min-w-[45%] h-[650px] overflow-y-auto">
+      <AlertDialogContent className="min-w-[37%] h-[650px] overflow-y-auto">
         <AlertDialogHeader className="grid grid-cols-1  w-full ">
           <div className="grid grid-cols-2">
             <div>

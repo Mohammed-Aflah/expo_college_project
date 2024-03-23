@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import router from "./routes/userRoute";
 import UserModal from "./Model/UserModal";
+import ExpoModel from "./Model/ExpoModel";
 
 
 dotenv.config();
@@ -27,7 +28,9 @@ app.use(
   })
 );
 app.use("/", router);
+
  app.listen(process.env.SERVER_PORT, async() => {
+  
   console.log(`Server running on port ${process.env.SERVER_PORT}`);
 });
 
