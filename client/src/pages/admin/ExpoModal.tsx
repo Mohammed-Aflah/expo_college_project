@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
+import { addDays, format, isBefore } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
@@ -212,7 +212,9 @@ export function ExpoModal() {
     toast.success(" Expo added ");
     Clsref.current?.click();
   };
-
+  const isDateDisabled = (day: Date): boolean => {
+    return isBefore(day, addDays(new Date(), -1));
+  };
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -316,6 +318,7 @@ export function ExpoModal() {
                 <Calendar
                   mode="single"
                   selected={date}
+                  disabled={isDateDisabled}
                   onSelect={handleDateChange}
                   initialFocus
                 />
