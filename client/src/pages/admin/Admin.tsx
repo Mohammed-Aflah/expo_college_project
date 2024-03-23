@@ -12,6 +12,7 @@ import { ExpoModal } from "./ExpoModal";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useEffect } from "react";
 import { getAllExpo } from "@/redux/actions/User/authAction";
+import { format } from "date-fns";
 
 
 const invoices = [
@@ -51,10 +52,10 @@ const dispatch:AppDispatch=useDispatch()
           {expos?.map((expo) => (
             <TableRow key={expo._id}>
               <TableCell className="font-medium">{expo.title}</TableCell>
-              <TableCell>{expo.date}</TableCell>
+              <TableCell>{format(new Date(expo.date),"PPP")}</TableCell>
               <TableCell>{expo.district}</TableCell>
               <TableCell>
-                <img src={expo.coverImage} className="h-12 rounded-full object-cover" alt="" />
+                <img src={expo.coverImage} className="h-12 w-12 rounded-full object-cover" alt="" />
               </TableCell>
               <TableCell className="text-right line-clamp-1">
                 <span>{expo.description}</span>
